@@ -7,8 +7,10 @@ import {
   TextInput,
   StyleSheet,
 } from "react-native";
+import { useState } from "react";
 import MaterialIcons from "@expo/vector-icons/MaterialIcons";
 import Button from "./Button";
+import CategoryList from "./CategoryList";
 import {
   SafeAreaProvider,
   useSafeAreaInsets,
@@ -16,11 +18,13 @@ import {
 
 export default function SettingsModal({
   isVisible,
-  onCloseModal,
-  quizLength,
-  changeQuizLength,
+  onClose,
+  updateQuizLength,
 }) {
   const insets = useSafeAreaInsets();
+
+  const [quizLengthInput, setQuizLengthInput] = useState(20);
+
   return (
     <Modal
       style={styles.modalContainer}
@@ -36,7 +40,7 @@ export default function SettingsModal({
       >
         <View style={styles.titleContainer}>
           <Text style={styles.title}>Settings</Text>
-          <Pressable onPress={onCloseModal}>
+          <Pressable onPress={onClose}>
             <MaterialIcons name="close" color="#fff" size={22} />
           </Pressable>
         </View>
@@ -44,10 +48,15 @@ export default function SettingsModal({
           <Text style={styles.label}>Number of words per quiz</Text>
           <TextInput
             style={styles.input}
-            // onChangeText={onChangeText}
-            value={quizLength}
+            value={quizLengthInput}
+            onChangeText={setQuizLengthInput}
           />
-          <Button theme="dark" width="50%" onPress={() => changeQuizLength()}>
+          <CategoryList />
+          <Button
+            theme="dark"
+            width="50%"
+            onPress={() => updateQuizLength(quizLengthInput)}
+          >
             Save
           </Button>
         </View>
@@ -58,21 +67,28 @@ export default function SettingsModal({
 
 const styles = StyleSheet.create({
   modalContainer: {
-    backgroundColor: "#386dc2",
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+    backgroundColor: "rgba(0,0,0,0.5)",
   },
   modalContent: {
-    height: "30%",
+    height: "85%",
     width: "100%",
     backgroundColor: "#fff",
-    borderTopRightRadius: 18,
-    borderTopLeftRadius: 18,
-    backgroundColor: "#fff",
-    // position: "absolute",
-    // top: 50,
+    borderRadius: 18,
+    borderWidth: 1,
+    borderColor: "#ddd",
+    overflow: "hidden",
+    elevation: 20, // For Android shadow
+    shadowColor: "#000", // For iOS shadow
+    shadowOffset: { width: 0, height: 2 }, // For iOS shadow
+    shadowOpacity: 0.25, // For iOS shadow
+    shadowRadius: 3.84, // For iOS shadow
   },
   titleContainer: {
-    height: "16%",
-    backgroundColor: "#464C55",
+    flex: 1,
+    backgroundColor: "#001358",
     borderTopRightRadius: 10,
     borderTopLeftRadius: 10,
     paddingHorizontal: 20,
@@ -82,17 +98,19 @@ const styles = StyleSheet.create({
   },
   title: {
     color: "#fff",
-    fontSize: 16,
+    fontSize: 24,
   },
   formContainer: {
+    flex: 7,
     flexDirection: "column",
+    padding: 12,
   },
   label: {
-    margin: 12,
+    marginBottom: 12,
   },
   input: {
     height: 40,
-    margin: 12,
+    marginVertical: 12,
     borderWidth: 1,
     padding: 10,
     borderRadius: 4,

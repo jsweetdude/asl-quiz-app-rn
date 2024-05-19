@@ -1,25 +1,11 @@
 import { Pressable, StyleSheet } from "react-native";
 import { FontAwesome, Ionicons } from "@expo/vector-icons";
 
-export default function BorderlessButton({
-  btnType,
-  label,
-  icon,
-  size,
-  onPress,
-}) {
-  const hintBtnPaddingLeft = 14;
-  const buttonPaddingLeft = label === "Hint" ? hintBtnPaddingLeft : 0;
-
-  const buttonStyle = {
-    ...styles.borderlessButton,
-    ...{ paddingLeft: buttonPaddingLeft },
-  };
-
+export default function IconButton({ btnType, label, icon, size, onPress }) {
   if (btnType === "icon-only circle") {
     return (
       <Pressable
-        style={buttonStyle}
+        style={[styles.iconButton, { width: size }]}
         role="button"
         aria-label={label}
         onPress={onPress}
@@ -31,7 +17,7 @@ export default function BorderlessButton({
 }
 
 const styles = StyleSheet.create({
-  borderlessButton: {
+  iconButton: {
     justifyContent: "center",
     alignItems: "center",
     borderRadius: 42,

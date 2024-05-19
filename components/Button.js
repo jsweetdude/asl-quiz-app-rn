@@ -40,7 +40,7 @@ const buttonThemes = {
     color: "#000",
   },
   dark: {
-    backgroundColor: "rgb(33, 37, 41)",
+    backgroundColor: "#001358",
     color: "#fff",
   },
 };
