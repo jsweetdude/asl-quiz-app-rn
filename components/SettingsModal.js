@@ -1,29 +1,54 @@
+import React, { useState, useEffect } from "react";
 import {
   Modal,
   View,
   Text,
   Pressable,
-  SafeAreaView,
   TextInput,
   StyleSheet,
 } from "react-native";
-import { useState } from "react";
 import MaterialIcons from "@expo/vector-icons/MaterialIcons";
 import Button from "./Button";
 import CategoryList from "./CategoryList";
-import {
-  SafeAreaProvider,
-  useSafeAreaInsets,
-} from "react-native-safe-area-context";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 export default function SettingsModal({
   isVisible,
   onClose,
   updateQuizLength,
+  updateCategories,
+  quizLength,
+  categoryList,
+  activeCategories,
 }) {
   const insets = useSafeAreaInsets();
 
-  const [quizLengthInput, setQuizLengthInput] = useState(20);
+  const [localQuizLength, setLocalQuizLength] = useState(String(quizLength));
+  const [localCategories, setLocalCategories] = useState(categoryList);
+  const [errorMessage, setErrorMessage] = useState("");
+
+  useEffect(() => {
+    setLocalQuizLength(String(quizLength));
+  }, [quizLength]);
+
+  useEffect(() => {
+    setLocalCategories(categoryList);
+  }, [categoryList]);
+
+  const updateLocalCategoriesHandler = (categoryChanges) => {
+    setLocalCategories(categoryChanges);
+  };
+
+  const onSave = () => {
+    if (localCategories.filter((category) => category.active).length === 0) {
+      setErrorMessage("Error: You must select at least one category.");
+    } else {
+      updateQuizLength(Number(localQuizLength));
+      updateCategories(localCategories);
+      setErrorMessage("");
+      onClose();
+    }
+  };
 
   return (
     <Modal
@@ -41,22 +66,26 @@ export default function SettingsModal({
         <View style={styles.titleContainer}>
           <Text style={styles.title}>Settings</Text>
           <Pressable onPress={onClose}>
-            <MaterialIcons name="close" color="#fff" size={22} />
+            <MaterialIcons name="close" color="#fff" size={28} />
           </Pressable>
         </View>
         <View style={styles.formContainer}>
           <Text style={styles.label}>Number of words per quiz</Text>
           <TextInput
             style={styles.input}
-            value={quizLengthInput}
-            onChangeText={setQuizLengthInput}
+            value={localQuizLength}
+            onChangeText={setLocalQuizLength}
+            inputMode="numeric"
           />
-          <CategoryList />
-          <Button
-            theme="dark"
-            width="50%"
-            onPress={() => updateQuizLength(quizLengthInput)}
-          >
+          <CategoryList
+            categories={categoryList}
+            activeCategories={activeCategories}
+            updateLocalCategories={updateLocalCategoriesHandler}
+          />
+          {errorMessage ? (
+            <Text style={styles.errorText}>{errorMessage}</Text>
+          ) : null}
+          <Button theme="dark" width="50%" onPress={onSave}>
             Save
           </Button>
         </View>
@@ -91,7 +120,7 @@ const styles = StyleSheet.create({
     backgroundColor: "#001358",
     borderTopRightRadius: 10,
     borderTopLeftRadius: 10,
-    paddingHorizontal: 20,
+    paddingHorizontal: 16,
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
@@ -107,6 +136,7 @@ const styles = StyleSheet.create({
   },
   label: {
     marginBottom: 12,
+    fontSize: 16,
   },
   input: {
     height: 40,
@@ -114,5 +144,9 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     padding: 10,
     borderRadius: 4,
+  },
+  errorText: {
+    color: "red",
+    marginBottom: 12,
   },
 });

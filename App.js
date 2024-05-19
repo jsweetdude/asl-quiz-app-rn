@@ -25,8 +25,25 @@ export default function App() {
   const [quizOn, setQuizOn] = useState(false);
   const [showSettings, setShowSettings] = useState(false);
   const [quizLength, setQuizLength] = useState(20);
+  const [categoryList, setCategoryList] = useState([]);
+  const [activeCategories, setActiveCategories] = useState([]);
 
-  if (Platform.OS === "default") {
+  useEffect(() => {
+    const uniqueCategories = Array.from(
+      new Set(wordList.map((word) => word.category))
+    );
+    setCategoryList(uniqueCategories);
+
+    const onLoadActiveCategories = [];
+    uniqueCategories.map((category) => {
+      onLoadActiveCategories.push({ categoryName: category, active: true });
+    });
+    console.log(onLoadActiveCategories);
+
+    setActiveCategories(onLoadActiveCategories);
+  }, []);
+
+  if (Platform.OS === "web") {
     document.title = "ASL Quiz App";
   }
 
@@ -43,6 +60,10 @@ export default function App() {
     closeSettingsModal();
   };
 
+  const updateActiveCategories = (updatedActiveCategories) => {
+    setActiveCategories(updatedActiveCategories);
+  };
+
   const showSettingsModal = () => {
     setShowSettings(true);
   };
@@ -56,6 +77,10 @@ export default function App() {
         <SettingsModal
           isVisible={showSettings}
           updateQuizLength={updateQuizLength}
+          updateCategories={updateActiveCategories}
+          quizLength={quizLength}
+          categories={categoryList}
+          activeCategories={activeCategories}
           onClose={closeSettingsModal}
         />
 

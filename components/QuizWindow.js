@@ -22,15 +22,11 @@ export default function QuizWindow({ quizLength, exitQuiz }) {
     setQuizSetArray(tempQuizSetArray);
     questionNum.current = 0;
     setQuizWord(wordList[tempQuizSetArray[questionNum.current]].term);
-
-    console.log("question number", questionNum.current);
   }, []);
 
   const getNextWord = () => {
     questionNum.current = questionNum.current + 1;
     if (questionNum.current < quizLength) {
-      console.log("question number", questionNum.current);
-
       setQuizWord(wordList[quizSetArray[questionNum.current]].term);
     } else {
       alert("You rock!");

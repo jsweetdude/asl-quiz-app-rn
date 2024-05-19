@@ -9,28 +9,24 @@ export default function Button({ children, theme, width, onPress }) {
   };
 
   return (
-    <View style={styles.buttonContainer}>
-      <Pressable style={buttonStyle} onPress={onPress}>
-        <Text style={{ color: buttonStyle.color }}>{children}</Text>
-      </Pressable>
-    </View>
+    <Pressable style={buttonStyle} onPress={onPress} role="button">
+      <Text style={{ color: buttonStyle.color }}>{children}</Text>
+    </Pressable>
   );
 }
 
 const styles = StyleSheet.create({
-  buttonContainer: {
-    marginTop: 12,
-    alignItems: "center",
-  },
   buttonStyle: {
+    display: "flex",
     borderRadius: 6,
-    marginHorizontal: 2,
-    marginVertical: 4,
+    marginHorizontal: 14,
+    marginVertical: 16,
     paddingHorizontal: 12,
     paddingVertical: 6,
     textAlign: "center",
     verticalAlign: "center",
     display: "inline-block",
+    alignItems: "center",
   },
 });
 
