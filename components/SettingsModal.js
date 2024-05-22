@@ -14,17 +14,15 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 export default function SettingsModal({
   isVisible,
-  onClose,
-  updateQuizLength,
-  updateCategories,
   quizLength,
-  categoryList,
-  activeCategories,
+  categories,
+  saveSettings,
+  onClose,
 }) {
   const insets = useSafeAreaInsets();
 
   const [localQuizLength, setLocalQuizLength] = useState(String(quizLength));
-  const [localCategories, setLocalCategories] = useState(categoryList);
+  const [localCategories, setLocalCategories] = useState([...categories]);
   const [errorMessage, setErrorMessage] = useState("");
 
   useEffect(() => {
@@ -32,10 +30,13 @@ export default function SettingsModal({
   }, [quizLength]);
 
   useEffect(() => {
-    setLocalCategories(categoryList);
-  }, [categoryList]);
+    setLocalCategories([...categories]);
+  }, [categories]);
 
-  const updateLocalCategoriesHandler = (categoryChanges) => {
+  useEffect(() => {});
+
+  // const updateCategoriesToApp / updateCategoriesToSettingsModal
+  const updateCategoriesToSettingsModal = (categoryChanges) => {
     setLocalCategories(categoryChanges);
   };
 
@@ -43,8 +44,7 @@ export default function SettingsModal({
     if (localCategories.filter((category) => category.active).length === 0) {
       setErrorMessage("Error: You must select at least one category.");
     } else {
-      updateQuizLength(Number(localQuizLength));
-      updateCategories(localCategories);
+      saveSettings(localCategories, Number(localQuizLength));
       setErrorMessage("");
       onClose();
     }
@@ -78,9 +78,8 @@ export default function SettingsModal({
             inputMode="numeric"
           />
           <CategoryList
-            categories={categoryList}
-            activeCategories={activeCategories}
-            updateLocalCategories={updateLocalCategoriesHandler}
+            categories={categories}
+            updateCategoriesToSettingsModal={updateCategoriesToSettingsModal}
           />
           {errorMessage ? (
             <Text style={styles.errorText}>{errorMessage}</Text>

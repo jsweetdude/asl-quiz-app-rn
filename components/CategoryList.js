@@ -15,69 +15,64 @@ const capitalizeFirstLetter = (string) => {
 };
 
 export default function CategoryList({
-  categoryList,
-  activeCategories,
-  updateLocalCategories,
+  categories,
+  updateCategoriesToSettingsModal,
 }) {
-  const [checkboxes, setCheckboxes] = useState([]);
-  const [localActiveCategories, setLocalActiveCategories] =
-    useState(activeCategories);
+  const [checkboxData, setCheckboxData] = useState([]);
 
   useEffect(() => {
-    const checkboxList = activeCategories.map((categoryObject, index) => ({
-      id: index + 1,
+    const checkboxList = categories.map((categoryObject, index) => ({
+      id: index,
       label: capitalizeFirstLetter(categoryObject.categoryName),
+      categoryName: categoryObject.categoryName,
       isChecked: categoryObject.active,
     }));
 
-    setCheckboxes(checkboxList);
-  }, [activeCategories]);
+    setCheckboxData(checkboxList);
+  }, [categories]);
 
   const selectAllCategories = () => {
-    const updatedCheckboxes = checkboxes.map((checkbox) => ({
+    const updatedCheckboxes = checkboxData.map((checkbox) => ({
       ...checkbox,
       isChecked: true,
     }));
-    setCheckboxes(updatedCheckboxes);
+    setCheckboxData(updatedCheckboxes);
 
-    const updatedActiveCategories = activeCategories.map((categoryObject) => ({
+    const updatedCategories = categories.map((categoryObject) => ({
       ...categoryObject,
       active: true,
     }));
-    setLocalActiveCategories(updatedActiveCategories);
-    updateLocalCategories(updatedActiveCategories);
+    updateCategoriesToSettingsModal(updatedCategories);
   };
 
   const deselectAllCategories = () => {
-    const updatedCheckboxes = checkboxes.map((checkbox) => ({
+    const updatedCheckboxes = checkboxData.map((checkbox) => ({
       ...checkbox,
       isChecked: false,
     }));
-    setCheckboxes(updatedCheckboxes);
+    setCheckboxData(updatedCheckboxes);
 
-    const updatedActiveCategories = activeCategories.map((categoryObject) => ({
+    const updatedCategories = categories.map((categoryObject) => ({
       ...categoryObject,
       active: false,
     }));
-    setLocalActiveCategories(updatedActiveCategories);
-    updateLocalCategories(updatedActiveCategories);
+    updateCategoriesToSettingsModal(updatedCategories);
   };
 
   const handleCheckboxChange = (checkboxID) => {
-    const updatedCheckboxes = checkboxes.map((checkbox) => {
+    const updatedCheckboxes = checkboxData.map((checkbox) => {
       if (checkbox.id === checkboxID) {
         return { ...checkbox, isChecked: !checkbox.isChecked };
       }
       return checkbox;
     });
-    setCheckboxes(updatedCheckboxes);
+    setCheckboxData(updatedCheckboxes);
 
-    const updatedActiveCategories = updatedCheckboxes.map((checkbox) => ({
-      categoryName: checkbox.label,
+    const updatedCategories = updatedCheckboxes.map((checkbox) => ({
+      categoryName: checkbox.categoryName,
       active: checkbox.isChecked,
     }));
-    setLocalActiveCategories(updatedActiveCategories);
-    updateLocalCategories(updatedActiveCategories);
+    updateCategoriesToSettingsModal(updatedCategories);
   };
 
   const renderCheckboxOrSwitch = (checkbox) => {
@@ -115,7 +110,7 @@ export default function CategoryList({
         </Button>
       </View>
       <ScrollView style={styles.scrollView}>
-        {checkboxes.map((checkbox) => (
+        {checkboxData.map((checkbox) => (
           <View key={checkbox.id} style={styles.checkboxContainer}>
             {renderCheckboxOrSwitch(checkbox)}
             <Text
@@ -134,9 +129,6 @@ export default function CategoryList({
 }
 
 const styles = StyleSheet.create({
-  categoryListContainer: {
-    flexDirection: "column",
-  },
   selectButtonsContainer: {
     flexDirection: "row",
     justifyContent: "space-around",

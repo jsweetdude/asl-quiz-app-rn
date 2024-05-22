@@ -1,38 +1,108 @@
-import React from "react";
-import { useState, useEffect, useRef } from "react";
-import { View, Text, Pressable, StyleSheet } from "react-native";
-import { FontAwesome, Ionicons, MaterialIcons } from "@expo/vector-icons";
+import React, { useState, useEffect, useRef } from "react";
+import { View, Text, Pressable, Alert, StyleSheet } from "react-native";
+import { MaterialIcons } from "@expo/vector-icons";
 import IconButton from "./IconButton";
-import wordList from "../assets/data.js";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 
-export default function QuizWindow({ quizLength, exitQuiz }) {
+export default function QuizWindow({
+  words,
+  categories,
+  quizLength,
+  exitQuiz,
+}) {
   const [quizSetArray, setQuizSetArray] = useState([]);
   const [quizWord, setQuizWord] = useState(null);
+  const [filteredWordListArray, setFilteredWordListArray] = useState([]);
 
   let questionNum = useRef(-1);
 
   useEffect(() => {
-    let tempQuizSetArray = [];
-    wordList.forEach((word, index) => {
+    const activeCategoryNames = new Set(
+      categories
+        .filter((category) => category.active)
+        .map((category) => category.categoryName)
+    );
+
+    // Filter the words data to include only words from active categories
+    const filteredWordList = words.filter((word) =>
+      activeCategoryNames.has(word.category)
+    );
+
+    setFilteredWordListArray(filteredWordList);
+
+    if (filteredWordList.length === 0) {
+      setQuizWord("No words available");
+      return;
+    }
+
+    let tempRandomWordIndex = [];
+    filteredWordList.forEach((word, index) => {
       for (let i = 0; i < word.multiplier; i++) {
-        tempQuizSetArray.push(index);
+        tempRandomWordIndex.push(index);
       }
     });
-    tempQuizSetArray.sort(() => 0.5 - Math.random());
-    setQuizSetArray(tempQuizSetArray);
+    tempRandomWordIndex.sort(() => 0.5 - Math.random());
+    setQuizSetArray(tempRandomWordIndex);
     questionNum.current = 0;
-    setQuizWord(wordList[tempQuizSetArray[questionNum.current]].term);
-  }, []);
+    if (tempRandomWordIndex.length > 0) {
+      setQuizWord(
+        filteredWordList[tempRandomWordIndex[questionNum.current]].term
+      );
+    }
+  }, [categories]);
 
   const getNextWord = () => {
     questionNum.current = questionNum.current + 1;
-    if (questionNum.current < quizLength) {
-      setQuizWord(wordList[quizSetArray[questionNum.current]].term);
+    if (
+      questionNum.current < quizLength &&
+      questionNum.current < quizSetArray.length
+    ) {
+      setQuizWord(
+        filteredWordListArray[quizSetArray[questionNum.current]].term
+      );
     } else {
       alert("You rock!");
       exitQuiz();
     }
   };
+
+  const saveWordsToStorage = async (updatedWords) => {
+    try {
+      await AsyncStorage.setItem("words", JSON.stringify(updatedWords));
+    } catch (error) {
+      console.error("Failed to save updated data.", error);
+    }
+  };
+
+  const adjustFrequency = (direction) => {
+    let thisWordMultiplier = -1;
+    const updatedWords = words.map((word) => {
+      if (word.term === quizWord) {
+        word.multiplier =
+          direction === "up" ? word.multiplier + 1 : word.multiplier - 1;
+        thisWordMultiplier = word.multiplier;
+      }
+      return word;
+    });
+    if (thisWordMultiplier === 0) {
+      console.log("WARNING");
+
+      // This isn't creating an alert
+      createWarningAlert();
+    }
+    console.log(updatedWords);
+    saveWordsToStorage(updatedWords);
+  };
+
+  const createWarningAlert = () =>
+    Alert.alert("Alert Title", "My Alert Msg", [
+      {
+        text: "Cancel",
+        onPress: () => console.log("Cancel Pressed"),
+        style: "cancel",
+      },
+      { text: "OK", onPress: () => console.log("OK Pressed") },
+    ]);
 
   return (
     <View style={styles.quizContainer}>
@@ -53,6 +123,9 @@ export default function QuizWindow({ quizLength, exitQuiz }) {
             label="Increase Frequency"
             icon="plus"
             size={24}
+            onPress={() => {
+              adjustFrequency("up");
+            }}
           />
         </View>
 
@@ -86,6 +159,9 @@ export default function QuizWindow({ quizLength, exitQuiz }) {
             label="Decrease Frequency"
             icon="minus"
             size={24}
+            onPress={() => {
+              adjustFrequency("down");
+            }}
           />
         </View>
       </View>
