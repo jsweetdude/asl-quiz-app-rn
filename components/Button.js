@@ -1,16 +1,22 @@
-import { View, Pressable, Text, StyleSheet } from "react-native";
-import { MaterialIcons } from "@expo/vector-icons";
+import { Pressable, Text, StyleSheet } from "react-native";
+import { MaterialIcons, Fontisto } from "@expo/vector-icons";
 
-export default function Button({ children, theme, width, onPress }) {
-  const buttonStyle = {
-    ...styles.buttonStyle,
-    ...buttonThemes[theme],
-    ...{ width: width },
-  };
+export default function Button({ children, theme, width, onPress, disabled }) {
+  const buttonStyle = [
+    styles.buttonStyle,
+    buttonThemes[theme],
+    { width: width },
+    disabled && styles.disabledButtonStyle,
+  ];
 
   return (
-    <Pressable style={buttonStyle} onPress={onPress} role="button">
-      <Text style={{ color: buttonStyle.color }}>{children}</Text>
+    <Pressable
+      style={buttonStyle}
+      onPress={onPress}
+      role="button"
+      disabled={disabled}
+    >
+      <Text style={{ color: buttonThemes[theme].color }}>{children}</Text>
     </Pressable>
   );
 }
@@ -28,12 +34,16 @@ const styles = StyleSheet.create({
     display: "inline-block",
     alignItems: "center",
   },
+  disabledButtonStyle: {
+    opacity: 0.5,
+    cursor: "not-allowed",
+  },
 });
 
 const buttonThemes = {
   light: {
-    backgroundColor: "rgb(248, 249, 250)",
-    color: "#000",
+    backgroundColor: "rgb(108, 117, 125)",
+    color: "#fff",
   },
   dark: {
     backgroundColor: "#001358",

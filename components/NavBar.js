@@ -1,10 +1,8 @@
-import React from "react";
+import React, { useState, useEffect } from "react";
 import { View, Image, Text, Pressable, StyleSheet } from "react-native";
 import { Fontisto, MaterialIcons } from "@expo/vector-icons";
-import IconButton from "./IconButton";
-import QuizWindow from "./QuizWindow";
 
-export default function NavBar({ showModal, quizOn }) {
+export default function NavBar({ showModal, isQuizActive }) {
   return (
     <View style={styles.header}>
       <View style={styles.headerLeft}>
@@ -14,9 +12,11 @@ export default function NavBar({ showModal, quizOn }) {
         />
         <Text style={styles.headerTextStyle}>ASL Quiz App</Text>
       </View>
-      <Pressable onPress={showModal} visible={!quizOn}>
-        <Fontisto name="equalizer" size={24} color="#fff" />
-      </Pressable>
+      {!isQuizActive && (
+        <Pressable style={styles.settingsButton} onPress={showModal}>
+          <Fontisto name="equalizer" size={24} color="#fff" />
+        </Pressable>
+      )}
     </View>
   );
 }
@@ -44,5 +44,8 @@ const styles = StyleSheet.create({
     color: "#fff",
     fontSize: 24,
     marginLeft: 24,
+  },
+  settingsButton: {
+    marginRight: 8,
   },
 });

@@ -132,6 +132,23 @@ export default function App() {
     document.title = "ASL Quiz App";
   }
 
+  const emptyLocalStorage = async () => {
+    try {
+      await AsyncStorage.clear();
+      console.log("Local storage cleared successfully");
+    } catch (e) {
+      console.log("Failed to remove data", e);
+    }
+  };
+  const printLocalStorage = async () => {
+    try {
+      const stored = await AsyncStorage.getItem("words");
+      console.log(stored);
+    } catch (error) {
+      console.log(error);
+    }
+  };
+
   return (
     <SafeAreaProvider style={{ backgroundColor: "#386dc2" }}>
       <SafeAreaView style={styles.container}>
@@ -158,6 +175,12 @@ export default function App() {
             <Text style={styles.textStyle}>Want to start the quiz?</Text>
             <Button theme="dark" onPress={startQuiz}>
               Start Quiz
+            </Button>
+            <Button theme="light" onPress={emptyLocalStorage}>
+              Empty Local Storage
+            </Button>
+            <Button theme="light" onPress={printLocalStorage}>
+              Print Local Storage to Console
             </Button>
           </View>
         )}
@@ -189,17 +212,18 @@ const styles = StyleSheet.create({
 
 /* Next Steps /*
 
-Hook up +/- buttons to multiplier, connect to local storage
- - include removal of word after '-' pressed enough times
-Hook up Back button, prevent from going before 0
-Hook up Hint button, give user option to create hints, connect to local storage
-Set up quiz End animation/etc.
+// Tasks
+* Set up more official "Quiz End"
+* Increase touch targets on iOS
+* Add button press effect, so you know when you've tapped a button
 
     /* Post MVP /*
 
 Separate screen to view words list, success rate, multiplier, #quizzes completed, #words completed, etc.
 Ability to edit and organize categories
 Ability to add words/categories
+Ability to adjust multipliers, etc.
+Accounts for multi-platform access
 
 
 */

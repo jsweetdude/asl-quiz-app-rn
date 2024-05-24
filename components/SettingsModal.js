@@ -35,7 +35,6 @@ export default function SettingsModal({
 
   useEffect(() => {});
 
-  // const updateCategoriesToApp / updateCategoriesToSettingsModal
   const updateCategoriesToSettingsModal = (categoryChanges) => {
     setLocalCategories(categoryChanges);
   };
@@ -46,7 +45,6 @@ export default function SettingsModal({
     } else {
       saveSettings(localCategories, Number(localQuizLength));
       setErrorMessage("");
-      onClose();
     }
   };
 
