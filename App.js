@@ -216,9 +216,12 @@ const styles = StyleSheet.create({
 * Set up more official "Quiz End"
 * Increase touch targets on iOS
 * Add button press effect, so you know when you've tapped a button
+* Remove ("x+1/y") when finish the quiz
 
     /* Post MVP /*
 
+Swipe gestures - e.g., Quizlet ("Know" vs "Still Learning")
+Clean quiz interface (eg Quizlet) - show word
 Separate screen to view words list, success rate, multiplier, #quizzes completed, #words completed, etc.
 Ability to edit and organize categories
 Ability to add words/categories

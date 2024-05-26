@@ -1,6 +1,6 @@
 {
   "expo": {
-    "name": "asl-quiz-app-1",
+    "name": "ASL Quiz App",
     "slug": "asl-quiz-app-1",
     "version": "1.0.0",
     "orientation": "portrait",
@@ -21,7 +21,7 @@
       }
     },
     "web": {
-      "favicon": "./assets/favicon.png"
+      "favicon": "./assets/asl-logo.png"
     }
   }
 }
