@@ -12,7 +12,8 @@
       "backgroundColor": "#ffffff"
     },
     "ios": {
-      "supportsTablet": true
+      "supportsTablet": true,
+      "bundleIdentifier": "com.sweetcreations.aslquizapp1"
     },
     "android": {
       "adaptiveIcon": {
@@ -22,6 +23,11 @@
     },
     "web": {
       "favicon": "./assets/asl-logo.png"
+    },
+    "extra": {
+      "eas": {
+        "projectId": "04dd49a5-3ba6-4759-9bb4-1f24fad53386"
+      }
     }
   }
 }

@@ -5,17 +5,24 @@ import {
   SafeAreaProvider,
   useSafeAreaInsets,
 } from "react-native-safe-area-context";
-import { MaterialIcons } from "@expo/vector-icons";
+// import { MaterialIcons } from "@expo/vector-icons";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import SettingsModal from "./components/SettingsModal";
-import Button from "./components/Button";
+// import Button from "./components/Button";
 import defaultWordData from "./assets/data.js";
 import QuizWindow from "./components/QuizWindow.js";
 import NavBar from "./components/NavBar.js";
+import { config } from "@gluestack-ui/config";
+import { StyledProvider } from "@gluestack-style/react";
+import { Box, Button, ButtonText } from "@gluestack-ui/themed";
+import { GestureHandlerRootView } from "react-native-gesture-handler";
+import DictionaryModal from "./components/DictionaryModal.js";
 
 export default function App() {
   const [isQuizActive, setIsQuizActive] = useState(false);
   const [isSettingsModalVisible, setIsSettingsModalVisible] = useState(false);
+  const [isDictionaryModalVisible, setIsDictionaryModalVisible] =
+    useState(false);
   const [words, setWords] = useState([]);
   const [categories, setCategories] = useState([]);
   const [quizLength, setQuizLength] = useState(20);
@@ -128,6 +135,14 @@ export default function App() {
     setIsSettingsModalVisible(false);
   };
 
+  const openDictionaryModal = () => {
+    setIsDictionaryModalVisible(true);
+  };
+
+  const closeDictionaryModal = () => {
+    setIsDictionaryModalVisible(false);
+  };
+
   if (Platform.OS === "web") {
     document.title = "ASL Quiz App";
   }
@@ -150,44 +165,62 @@ export default function App() {
   };
 
   return (
-    <SafeAreaProvider style={{ backgroundColor: "#386dc2" }}>
-      <SafeAreaView style={styles.container}>
-        <SettingsModal
-          isVisible={isSettingsModalVisible}
-          saveSettings={saveSettings}
-          quizLength={quizLength}
-          categories={categories}
-          onClose={closeSettingsModal}
-        />
+    <GestureHandlerRootView style={{ flex: 1 }}>
+      <SafeAreaProvider style={{ backgroundColor: "#386dc2" }}>
+        <StyledProvider config={config}>
+          <SafeAreaView style={styles.container}>
+            <SettingsModal
+              isVisible={isSettingsModalVisible}
+              saveSettings={saveSettings}
+              quizLength={quizLength}
+              categories={categories}
+              onClose={closeSettingsModal}
+            />
+            <DictionaryModal
+              isVisible={isDictionaryModalVisible}
+              onClose={closeDictionaryModal}
+            />
 
-        <NavBar showModal={openSettingsModal} isQuizActive={isQuizActive} />
+            {!isQuizActive && (
+              <NavBar
+                showSettings={openSettingsModal}
+                showDictionary={openDictionaryModal}
+              />
+            )}
 
-        {isQuizActive ? (
-          <QuizWindow
-            quizLength={quizLength}
-            exitQuiz={() => setIsQuizActive(false)}
-            categories={categories}
-            words={words}
-          />
-        ) : (
-          <View style={styles.homeContainer}>
-            <Text style={styles.textStyle}>Hey beautiful!</Text>
-            <Text style={styles.textStyle}>Want to start the quiz?</Text>
-            <Button theme="dark" onPress={startQuiz}>
-              Start Quiz
-            </Button>
-            <Button theme="light" onPress={emptyLocalStorage}>
-              Empty Local Storage
-            </Button>
-            <Button theme="light" onPress={printLocalStorage}>
-              Print Local Storage to Console
-            </Button>
-          </View>
-        )}
+            {isQuizActive ? (
+              <QuizWindow
+                quizLength={quizLength}
+                exitQuiz={() => setIsQuizActive(false)}
+                categories={categories}
+                words={words}
+              />
+            ) : (
+              <View style={styles.homeContainer}>
+                <Text style={styles.textStyle}>Hey beautiful!</Text>
+                <Text style={styles.textStyleMargin}>
+                  Want to start the quiz?
+                </Text>
+                <Button size="lg" bg="rgb(0, 19, 88)" onPress={startQuiz}>
+                  <ButtonText>Start Quiz</ButtonText>
+                </Button>
 
-        <StatusBar style="auto" />
-      </SafeAreaView>
-    </SafeAreaProvider>
+                {/*
+                <Button theme="light" onPress={emptyLocalStorage}>
+                  Empty Local Storage
+                </Button>
+                <Button theme="light" onPress={printLocalStorage}>
+                  Print Local Storage to Console
+                </Button>
+            */}
+              </View>
+            )}
+
+            <StatusBar style="auto" />
+          </SafeAreaView>
+        </StyledProvider>
+      </SafeAreaProvider>
+    </GestureHandlerRootView>
   );
 }
 
@@ -207,6 +240,10 @@ const styles = StyleSheet.create({
   },
   textStyle: {
     color: "#000",
+  },
+  textStyleMargin: {
+    color: "#000",
+    marginBottom: 42,
   },
 });
 

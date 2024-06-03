@@ -1,17 +1,14 @@
 import React, { useState, useEffect, useRef } from "react";
-import {
-  View,
-  Text,
-  Pressable,
-  Alert,
-  StyleSheet,
-  Platform,
-} from "react-native";
-import { MaterialIcons } from "@expo/vector-icons";
+import { View, Text, StyleSheet, Animated, Platform } from "react-native";
 import IconButton from "./IconButton";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import HintModal from "./HintModal.js";
-import { CongratulatoryAnimation } from "./CongratulatoryAnimation.js";
+import { HStack, VStack, Box, Divider } from "@gluestack-ui/themed";
+import {
+  GestureHandlerRootView,
+  PanGestureHandler,
+  State,
+} from "react-native-gesture-handler";
 
 function shuffleArray(array) {
   for (let i = array.length - 1; i > 0; i--) {
@@ -50,42 +47,142 @@ export default function QuizWindow({
   const [filteredWordListArray, setFilteredWordListArray] = useState([]);
   const [isHintModalVisible, setIsHintModalVisible] = useState(false);
   const [dummyState, setDummyState] = useState(true);
-  const [showCongrats, setShowCongrats] = useState(false);
 
   let questionNum = useRef(-1);
 
+  //////////////////////////////////////////////////
+  ////////// Begin Gesture/Swipe Handling //////////
+  //////////////////////////////////////////////////
+
+  const translateX = useRef(new Animated.Value(0)).current;
+  const [cardWidth, setCardWidth] = useState(1);
+
+  // Ensure initial value is 0
   useEffect(() => {
-    // Generate an array containing only the active categories
-    // Used to filter 'words' dictionary to words in those categories
+    translateX.setValue(0);
+  }, []);
+
+  const greenBoxOpacity = translateX.interpolate({
+    inputRange: [80, 200],
+    outputRange: [0, 1],
+    extrapolate: "clamp",
+  });
+
+  const redBoxOpacity = translateX.interpolate({
+    inputRange: [-200, -80],
+    outputRange: [1, 0],
+    extrapolate: "clamp",
+  });
+
+  const borderColor = translateX.interpolate({
+    inputRange: [-50, 0, 50],
+    outputRange: ["#ea580c", "#E9E9E9", "rgb(5, 150, 105)"],
+    extrapolate: "clamp",
+  });
+
+  const onGestureEvent = Animated.event(
+    [
+      {
+        nativeEvent: {
+          translationX: translateX,
+        },
+      },
+    ],
+    { useNativeDriver: false }
+  );
+
+  const onHandlerStateChange = (event) => {
+    if (event.nativeEvent.state === State.END) {
+      const translationPercent = (translateX._value / cardWidth) * 100;
+
+      if (translationPercent > 50) {
+        handleSwipeRight();
+      } else if (translationPercent < -50) {
+        handleSwipeLeft();
+      }
+      Animated.spring(translateX, {
+        toValue: 0,
+        useNativeDriver: false,
+      }).start();
+    }
+  };
+
+  const panGestureProps = Platform.select({
+    web: {
+      activeOffsetX: [-10, 10],
+      failOffsetY: [-10, 10],
+    },
+    default: {},
+  });
+
+  useEffect(() => {
+    const listener = translateX.addListener(({ value }) => {
+      const translationPercent = (value / cardWidth) * 100;
+
+      // debug
+      // logPositionPercent(translationPercent);
+    });
+
+    return () => {
+      translateX.removeListener(listener);
+    };
+  }, [cardWidth]);
+
+  // debug - can remove
+  // const logPositionPercent = (position) => {
+  //   console.log("Position is " + position);
+  // };
+
+  const changeWordRating = (direction) => {
+    const updatedWords = words.map((word) => {
+      if (word.term === quizWord) {
+        if (direction === "know") {
+          word.know = word.know + 1;
+        } else if (direction === "still learning") {
+          word.stillLearning = word.stillLearning + 1;
+        }
+      }
+      return word;
+    });
+    saveWordsToStorage(updatedWords);
+  };
+
+  const handleSwipeRight = () => {
+    console.log("Swiped right");
+    changeWordRating("know");
+    getNextWord();
+  };
+
+  const handleSwipeLeft = () => {
+    console.log("Swiped left");
+    changeWordRating("still learning");
+    getNextWord();
+  };
+
+  //////////////////////////////////////////
+  ////////// Begin Quiz Mechanics //////////
+  //////////////////////////////////////////
+
+  useEffect(() => {
     const activeCategoryNames = new Set(
       categories
         .filter((category) => category.active)
         .map((category) => category.categoryName)
     );
 
-    // Filter the words data to include only words from active categories
     const filteredWordList = words.filter((word) =>
       activeCategoryNames.has(word.category)
     );
 
-    // State contains all applicable words objects, including term, multiplier, category, hint
     setFilteredWordListArray(filteredWordList);
 
-    // Error: if no categories are chosen, or if an error importing 'words' list
     if (filteredWordList.length === 0) {
       setQuizWord("No words available");
       return;
     }
 
-    // Create array container for this quiz
-    // To contain the indices of words
     let tempRandomWordIndex = [];
-    // The 'while' loop ensures that there will be enough quiz words
-    // to last the length of 'quizLength'
     while (tempRandomWordIndex.length < quizLength) {
-      // Go through each active word in 'words'
-      // and push it into the quiz array as many times
-      // as its multiplier dictates
       filteredWordList.forEach((word, index) => {
         for (let i = 0; i < word.multiplier; i++) {
           tempRandomWordIndex.push(index);
@@ -126,8 +223,8 @@ export default function QuizWindow({
       );
       setDummyState(!dummyState);
     } else {
-      setShowCongrats(true);
-      // exitQuiz();
+      // setShowCongrats(true);
+      exitQuiz();
     }
   };
 
@@ -158,15 +255,11 @@ export default function QuizWindow({
     const updatedWords = words.map((word) => {
       if (word.term === quizWord) {
         if (direction === "up") {
-          // If the user is INCREASING frequency
           word.multiplier = word.multiplier + 1;
         } else if (direction === "down") {
-          // If the user is DECREASING frequency
           if (word.multiplier === 1) {
-            // If the word is already at 1
             createPromptAlert((remove) => {
               if (!remove) {
-                // If the user DOES NOT opt to REMOVE
                 word.multiplier = 1;
               } else {
                 word.multiplier = 0;
@@ -235,10 +328,6 @@ export default function QuizWindow({
 
   const saveNewHint = (newHintText) => {
     setIsHintModalVisible(false);
-    // If the hint has changed, replace the existing hint with the new one
-    // (in device storage)
-    // Also, needs to update in the current quiz - in case it reappears
-    // CAN REMOVE IF NOT ALLOWING DUPLICATES
     const updatedWords = words.map((word) => {
       if (word.term === quizWord) {
         word.hint = newHintText;
@@ -249,7 +338,7 @@ export default function QuizWindow({
   };
 
   const handleAnimationEnd = () => {
-    setShowCongrats(false);
+    // setShowCongrats(false);
     exitQuiz();
   };
 
@@ -262,159 +351,153 @@ export default function QuizWindow({
         onClose={closeHintModal}
         onSave={saveNewHint}
       />
-      <View style={styles.quizContainer}>
-        <View style={styles.exitContainer}>
-          <Pressable onPress={exitQuiz}>
-            <MaterialIcons name="close" size={32} color="#001358" />
-          </Pressable>
-        </View>
 
-        <View style={styles.quizWord}>
-          <Text style={styles.quizWordCounter}>
+      <VStack style={styles.outerContainer}>
+        <HStack style={styles.topBar}>
+          <IconButton
+            name="X"
+            backgroundColor="#fff"
+            strokeColor="rgb(0,19,88)"
+            size={40}
+            onPress={exitQuiz}
+          />
+          <Text style={styles.quizStatus}>
             {questionNum.current + 1} / {quizLength}
           </Text>
-          <Text style={styles.quizWordTextStyle}>{quizWord}</Text>
-        </View>
+          <Box style={styles.spacerBox} />
+        </HStack>
 
-        <View style={styles.controlsContainer}>
-          <View style={styles.controlsTopRow}>
-            <IconButton
-              btnType="icon-only circle"
-              label="Increase Frequency"
-              icon="plus"
-              iconLibrary="fontawesome"
-              size={24}
-              color={"#001358"}
-              backgroundColor={"#fff"}
-              onPress={() => {
-                adjustFrequency("up");
-              }}
-              isVisible={true}
-            />
-          </View>
+        <Divider mx="2.5" bg="$indigo500" h={2} backgroundColor="gray" />
 
-          <View style={styles.controlsMidRow}>
-            <IconButton
-              btnType="icon-only circle"
-              label="Previous Word"
-              icon="step-backward"
-              iconLibrary="fontawesome"
-              size={44}
-              color={"#001358"}
-              backgroundColor={"#fff"}
-              onPress={getPrevWord}
-              isVisible={true}
-            />
+        <Box style={styles.quizCardContainer}>
+          <Animated.View
+            style={[styles.stillLearningBox, { opacity: redBoxOpacity }]}
+          >
+            <Text style={styles.stillLearningText}>-1</Text>
+          </Animated.View>
+          <Animated.View style={[styles.knowBox, { opacity: greenBoxOpacity }]}>
+            <Text style={styles.knowText}>+1</Text>
+          </Animated.View>
+          <GestureHandlerRootView style={styles.container}>
+            <PanGestureHandler
+              onGestureEvent={onGestureEvent}
+              onHandlerStateChange={onHandlerStateChange}
+              {...panGestureProps}
+            >
+              <Animated.View
+                style={[
+                  styles.swipeableCard,
+                  {
+                    transform: [{ translateX }],
+                    borderColor: borderColor,
+                  },
+                ]}
+                onLayout={(event) => {
+                  const { width } = event.nativeEvent.layout;
+                  setCardWidth(width);
+                }}
+              >
+                <Text style={styles.text}>Swipe me</Text>
+                <Text style={styles.quizWordTextStyle}>{quizWord}</Text>
+              </Animated.View>
+            </PanGestureHandler>
+          </GestureHandlerRootView>
+        </Box>
 
-            <IconButton
-              btnType="icon-only circle"
-              label="Hint"
-              icon="lightbulb-o"
-              iconLibrary="fontawesome"
-              size={44}
-              color={"#001358"}
-              backgroundColor={"#fff"}
-              onPress={() => {
-                setIsHintModalVisible(true);
-              }}
-              isVisible={true}
-            />
-
-            {questionNum.current >= quizLength - 1 ? (
-              <IconButton
-                btnType="icon-only circle"
-                label="Next Word"
-                icon="flag-checkered"
-                iconLibrary="fontawesome"
-                size={44}
-                color={"#001358"}
-                backgroundColor={"#fff"}
-                onPress={getNextWord}
-                isVisible={true}
-              />
-            ) : (
-              <IconButton
-                btnType="icon-only circle"
-                label="Next Word"
-                icon="forward"
-                iconLibrary="fontawesome"
-                size={44}
-                color={"#001358"}
-                backgroundColor={"#fff"}
-                onPress={getNextWord}
-                isVisible={true}
-              />
-            )}
-          </View>
-
-          <View style={styles.controlsBottomRow}>
-            <IconButton
-              btnType="icon-only circle"
-              label="Decrease Frequency"
-              icon="minus"
-              iconLibrary="fontawesome"
-              size={24}
-              color={"#001358"}
-              backgroundColor={"#fff"}
-              onPress={() => {
-                adjustFrequency("down");
-              }}
-              isVisible={true}
-            />
-          </View>
-        </View>
-      </View>
-      <CongratulatoryAnimation
-        visible={showCongrats}
-        onEnd={handleAnimationEnd}
-      />
+        <HStack style={styles.bottomBar}>
+          <IconButton
+            name="Undo2"
+            backgroundColor="#fff"
+            strokeColor="rgb(0,19,88)"
+            size={40}
+            onPress={getPrevWord}
+          />
+          <IconButton
+            name="Lightbulb"
+            backgroundColor="#fff"
+            strokeColor="rgb(0,19,88)"
+            size={40}
+            onPress={() => {
+              setIsHintModalVisible(true);
+            }}
+          />
+        </HStack>
+      </VStack>
     </>
   );
 }
 
 const styles = StyleSheet.create({
-  quizContainer: {
-    flex: 7,
+  outerContainer: {
+    flex: 1,
+    padding: 8,
     width: "100%",
   },
-  exitContainer: {
+  topBar: {
     flex: 1,
-    alignItems: "flex-start",
-    justifyContent: "center",
-    width: "100%",
-    paddingLeft: 12,
-  },
-  quizWord: {
-    flex: 6,
-    justifyContent: "center",
     alignItems: "center",
-  },
-  quizWordCounter: {
-    flex: 1,
-    width: "50%",
-    alignItems: "start",
-  },
-  quizWordTextStyle: {
-    flex: 11,
-    alignContent: "center",
-    color: "#000",
-    fontSize: 32,
-  },
-  controlsContainer: {
-    flex: 6,
-    justifyContent: "center",
-    flexDirection: "column",
-  },
-  controlsTopRow: {
-    alignItems: "center",
-  },
-  controlsMidRow: {
+    justifyContent: "space-between",
     flexDirection: "row",
-    justifyContent: "center",
-    alignItems: "center",
-    marginVertical: 56,
   },
-  controlsBottomRow: {
+  quizStatus: {
+    textAlign: "center",
+    fontSize: "18pt",
+  },
+  spacerBox: {
+    width: 48,
+  },
+  quizCardContainer: {
+    flex: 9,
+  },
+  stillLearningBox: {
+    position: "absolute",
+    top: 30,
+    left: 30,
+    zIndex: 100,
+    backgroundColor: "red",
+    borderRadius: 20,
+    width: 36,
+    padding: 4,
     alignItems: "center",
+    justifyContent: "center",
+    opacity: 0, // Ensure opacity is set to 0 initially
+  },
+  stillLearningText: {
+    color: "white",
+    fontSize: 24,
+  },
+  knowBox: {
+    position: "absolute",
+    top: 30,
+    right: 30,
+    zIndex: 100,
+    backgroundColor: "green",
+    borderRadius: 20,
+    width: 36,
+    padding: 4,
+    alignItems: "center",
+    justifyContent: "center",
+    opacity: 0, // Ensure opacity is set to 0 initially
+  },
+  knowText: {
+    color: "white",
+    fontSize: 24,
+  },
+  swipeableCard: {
+    flex: 1,
+    alignItems: "center",
+    justifyContent: "center",
+    backgroundColor: "rgb(252,250,250)",
+    marginHorizontal: 24,
+    marginTop: 24,
+    marginBottom: 12,
+    border: "2px solid #E9E9E9",
+    borderRadius: 12,
+  },
+  bottomBar: {
+    flex: 1,
+    alignItems: "center",
+    justifyContent: "space-between",
+    flexDirection: "row",
   },
 });

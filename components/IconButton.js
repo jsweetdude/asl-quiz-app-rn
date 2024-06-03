@@ -1,19 +1,30 @@
-import { Pressable, StyleSheet } from "react-native";
-import { FontAwesome, Ionicons } from "@expo/vector-icons";
+import { StyleSheet } from "react-native";
+import { HStack, VStack, Button } from "@gluestack-ui/themed";
+import Icon from "./Icon";
 
-export default function IconButton({ btnType, label, icon, size, onPress }) {
-  if (btnType === "icon-only circle") {
-    return (
-      <Pressable
-        style={[styles.iconButton, { width: size }]}
-        role="button"
-        aria-label={label}
-        onPress={onPress}
-      >
-        <FontAwesome name={icon} color={"#001358"} size={size} />
-      </Pressable>
-    );
-  }
+export default function IconButton({
+  label,
+  name,
+  backgroundColor,
+  strokeColor,
+  size,
+  onPress,
+  isVisible,
+}) {
+  const bgColor = {
+    backgroundColor: backgroundColor,
+  };
+
+  return (
+    <Button
+      style={[styles.iconButton, bgColor]}
+      role="button"
+      aria-label={label}
+      onPress={onPress}
+    >
+      <Icon name={name} color={strokeColor} size={size} />
+    </Button>
+  );
 }
 
 const styles = StyleSheet.create({
@@ -21,7 +32,7 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     alignItems: "center",
     borderRadius: 42,
-    backgroundColor: "#fff",
-    marginHorizontal: 48,
+    paddingHorizontal: 8,
+    paddingVertical: 8,
   },
 });
