@@ -144,7 +144,7 @@ export default function App() {
   };
 
   if (Platform.OS === "web") {
-    document.title = "ASL Quiz App";
+    document.title = "LearnSign";
   }
 
   const emptyLocalStorage = async () => {

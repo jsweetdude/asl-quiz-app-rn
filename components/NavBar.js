@@ -12,7 +12,7 @@ export default function NavBar({ showSettings, showDictionary }) {
           style={styles.headerLogo}
           source={require("../assets/asl-logo.png")}
         />
-        <Text style={styles.headerTextStyle}>ASL Quiz App</Text>
+        <Text style={styles.headerTextStyle}>LearnSign</Text>
       </Box>
       <HStack style={styles.buttonGroup}>
         <IconButton
